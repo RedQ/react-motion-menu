@@ -1,13 +1,12 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import MenuItem from './item';
-import MenuButton from './button';
+import React, { Component } from "react";
+import PropTypes from "prop-types";
+import MenuItem from "./item";
+import MenuButton from "./button";
 
 export default class MotionMenu extends Component {
-
   static propTypes = {
     margin: PropTypes.number.isRequired,
-    type: PropTypes.oneOf(['horizontal', 'vertical', 'circle']).isRequired,
+    type: PropTypes.oneOf(["horizontal", "vertical", "circle"]).isRequired,
     wing: PropTypes.bool,
     x: PropTypes.number,
     y: PropTypes.number,
@@ -16,8 +15,8 @@ export default class MotionMenu extends Component {
     className: PropTypes.string,
     bumpy: PropTypes.bool,
     openSpeed: PropTypes.number,
-    reverse: PropTypes.bool,
-  }
+    reverse: PropTypes.bool
+  };
 
   static defaultProps = {
     x: 0,
@@ -27,27 +26,48 @@ export default class MotionMenu extends Component {
     onOpen: () => {},
     bumpy: true,
     openSpeed: 60,
-    reverse: false,
-  }
+    reverse: false
+  };
 
   constructor(props) {
     super(props);
     this.state = {
       itemNumber: 1,
-      status: 'idle',
+      status: "idle"
     };
     this.items = [];
     this.onOpenEnd = this.onOpenEnd.bind(this);
     this.onCloseEnd = this.onCloseEnd.bind(this);
     this.onClick = this.onClick.bind(this);
+    this.handleClickOutside = this.handleClickOutside.bind(this);
+    this.setWrapperRef = this.setWrapperRef.bind(this);
+  }
+  componentDidMount() {
+    document.addEventListener("mousedown", this.handleClickOutside);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener("mousedown", this.handleClickOutside);
+  }
+
+  setWrapperRef(node) {
+    this.wrapperRef = node;
+  }
+
+  handleClickOutside(event) {
+    if (this.wrapperRef && !this.wrapperRef.contains(event.target)) {
+      if (this.state.action === "open") {
+        this.closeItems();
+      }
+    }
   }
 
   onOpenEnd(name) {
-    if (this.state.action !== 'open') return;
+    if (this.state.action !== "open") return;
     if (this.state.itemNumber < this.props.children.length) {
       this.items[this.state.itemNumber].start();
       this.setState({
-        itemNumber: this.state.itemNumber + 1,
+        itemNumber: this.state.itemNumber + 1
       });
       return;
     }
@@ -57,22 +77,22 @@ export default class MotionMenu extends Component {
   }
 
   onCloseEnd(name) {
-    if (this.state.action === 'open') return;
-    if (name === 'item1') {
+    if (this.state.action === "open") return;
+    if (name === "item1") {
       this.props.onClose();
     }
     if (this.state.itemNumber > 1) {
-      if (name === 'item1') {
+      if (name === "item1") {
         this.props.onClose();
       }
       this.setState({
-        itemNumber: this.state.itemNumber - 1,
+        itemNumber: this.state.itemNumber - 1
       });
     }
   }
 
   onClick() {
-    if (this.state.action === 'open') {
+    if (this.state.action === "open") {
       this.closeItems();
     } else {
       this.openItem();
@@ -81,28 +101,28 @@ export default class MotionMenu extends Component {
 
   getDistance(i) {
     return this.props.wing
-      ? (parseInt(i / 2, 10) + 1) * this.props.margin * ((i % 2) || -1)
+      ? (parseInt(i / 2, 10) + 1) * this.props.margin * (i % 2 || -1)
       : this.props.margin * (i + 1);
   }
 
   getX(i, x) {
     const { type, margin, children } = this.props;
-    if (type === 'horizontal') {
+    if (type === "horizontal") {
       return this.getDistance(i) + x;
     }
-    if (type === 'circle') {
-      return x + (margin * Math.cos((Math.PI * 2 * i) / (children.length - 1)));
+    if (type === "circle") {
+      return x + margin * Math.cos(Math.PI * 2 * i / (children.length - 1));
     }
     return x;
   }
 
   getY(i, y) {
     const { type, margin, children } = this.props;
-    if (type === 'vertical') {
+    if (type === "vertical") {
       return this.getDistance(i) + y;
     }
-    if (type === 'circle') {
-      return y + (margin * Math.sin((Math.PI * 2 * i) / (children.length - 1)));
+    if (type === "circle") {
+      return y + margin * Math.sin(Math.PI * 2 * i / (children.length - 1));
     }
     return y;
   }
@@ -114,7 +134,9 @@ export default class MotionMenu extends Component {
       .map(i => (
         <MenuItem
           key={i}
-          ref={(c) => { this.items[i + 1] = c; }}
+          ref={c => {
+            this.items[i + 1] = c;
+          }}
           name={`item${i + 1}`}
           onOpenAnimationEnd={this.onOpenEnd}
           onCloseAnimationEnd={this.onCloseEnd}
@@ -127,14 +149,15 @@ export default class MotionMenu extends Component {
         >
           {this.props.children[i + 1]}
         </MenuItem>
-      ),
-    );
+      ));
   }
 
   get menuButton() {
     return (
       <MenuButton
-        ref={(c) => { this.button = c; }}
+        ref={c => {
+          this.button = c;
+        }}
         onClick={this.onClick}
         x={this.props.x}
         y={this.props.y}
@@ -146,7 +169,7 @@ export default class MotionMenu extends Component {
   }
 
   closeItems() {
-    this.setState({ action: 'close' });
+    this.setState({ action: "close" });
     this.button.reverse();
     Array.from(Array(this.state.itemNumber).keys())
       .reverse()
@@ -154,28 +177,30 @@ export default class MotionMenu extends Component {
   }
 
   close() {
-    if (this.state.action !== 'open') return;
+    if (this.state.action !== "open") return;
     this.closeItems();
   }
 
   open() {
-    if (this.state.action === 'open') return;
+    if (this.state.action === "open") return;
     this.openItem();
   }
 
   openItem() {
-    this.setState({ action: 'open' });
+    this.setState({ action: "open" });
     this.button.start();
     this.items[this.state.itemNumber].start();
   }
 
   render() {
+    console.log(this.props);
     return (
       <div
         style={this.props.style}
         className={this.props.className}
+        ref={this.setWrapperRef}
       >
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: "relative" }}>
           {this.menuButton}
           {this.getItems()}
         </div>

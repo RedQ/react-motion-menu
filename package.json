@@ -69,7 +69,8 @@
     ]
   },
   "dependencies": {
-    "prop-types": "^15.5.10",
+    "prop-types": "^15.6.0",
+    "react-click-outside": "tj/react-click-outside",
     "react-motion": "^0.4.7"
   },
   "files": [
